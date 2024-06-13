@@ -7,7 +7,9 @@ admin.initializeApp();
 // Import functions
 const {geminiSayHi} = require("./handlers/geminiTest");
 const {loginByUserName} = require("./handlers/loginByUserName");
+const {generateHero} = require("./handlers/generateHero");
 
 // Export functions
 exports.geminiSayHi = functions.https.onRequest(geminiSayHi);
 exports.loginByUserName = functions.https.onRequest(loginByUserName);
+exports.generateHero = functions.https.onRequest(generateHero);
