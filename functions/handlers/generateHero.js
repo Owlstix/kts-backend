@@ -2,11 +2,11 @@ const admin = require("firebase-admin");
 const {GoogleGenerativeAI} = require("@google/generative-ai");
 const functions = require("firebase-functions");
 const {
-  tierRarity,
-  tierMultiplier,
-  hpRange,
-  attackRange,
-} = require("./constants");
+  TIER_RARITY,
+  TIER_MULTIPLIER,
+  HP_RANGE,
+  ATTACK_RANGE,
+} = require("../utils/constants");
 
 const db = admin.firestore();
 
@@ -27,32 +27,32 @@ const generateHero = async (req, res) => {
     const userId = req.query.userId;
 
     if (!userId) {
-      res.status(400).send({error: "User ID is required"});
+      res.status(400).send({error: "userId is required"});
       return;
     }
 
     // Verify that the user exists
     const userDoc = await db.collection("users").doc(userId).get();
     if (!userDoc.exists) {
-      res.status(404).send({error: "User not found"});
+      res.status(404).send({error: "user not found"});
       return;
     }
 
     // Randomly generate hero attributes
     const sex = Math.random() < 0.5 ? "male" : "female";
-    const tier = generateRandomValue(["B-Tier", "A-Tier", "S-Tier"], tierRarity);
+    const tier = generateRandomValue(["B-Tier", "A-Tier", "S-Tier"], TIER_RARITY);
     const type = generateRandomValue(["fighter", "killer", "mage"], [0.33, 0.33, 0.34]);
 
-    const tierMultiplierValue = tierMultiplier[tier];
+    const tierMultiplierValue = TIER_MULTIPLIER[tier];
 
     const maxHP = Math.floor(
-        (Math.random() * (hpRange[type].max - hpRange[type].min + 1)) +
-      hpRange[type].min,
+        (Math.random() * (HP_RANGE[type].max - HP_RANGE[type].min + 1)) +
+      HP_RANGE[type].min,
     ) * tierMultiplierValue;
 
     const attack = Math.floor(
-        (Math.random() * (attackRange[type].max - attackRange[type].min + 1)) +
-      attackRange[type].min,
+        (Math.random() * (ATTACK_RANGE[type].max - ATTACK_RANGE[type].min + 1)) +
+      ATTACK_RANGE[type].min,
     ) * tierMultiplierValue;
 
     // Access the API key from Firebase functions config
@@ -135,15 +135,15 @@ const generateHero = async (req, res) => {
     // Store the hero in Firestore
     const heroRef = await db.collection("heroes").add(hero);
 
-    // Create the UserToHero relationship
+    // Create the userToHero relationship
     const userToHero = {
-      heroID: heroRef.id,
-      userID: userId,
+      heroId: heroRef.id,
+      userId: userId,
       current_hp: maxHP,
     };
 
     // Store the relationship in Firestore
-    const userToHeroRef = await db.collection("UserToHero").add(userToHero);
+    const userToHeroRef = await db.collection("userToHero").add(userToHero);
 
     // Send the response back to the client
     res.status(200).send({heroId: heroRef.id, userToHeroId: userToHeroRef.id, ...hero});

@@ -27,7 +27,7 @@ const loginByUserName = async (req, res) => {
       });
 
       // Return the newly created document ID
-      res.status(200).send({id: newUserRef.id});
+      res.status(200).send({userId: newUserRef.id});
     }
   } catch (error) {
     console.error("Error in loginByUserName:", error);
