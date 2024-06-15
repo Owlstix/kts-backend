@@ -9,11 +9,11 @@ const {geminiSayHi} = require("./handlers/geminiTest");
 const {loginByUserName} = require("./handlers/loginByUserName");
 const {generateHero} = require("./handlers/generateHero");
 const {getHeroes} = require("./handlers/getHeroes");
-const {aiEventEnemy} = require("./handlers/aiEventEnemy");
+const {aiGenerateEvent} = require("./handlers/aiGenerateEvent");
 
 // Export functions
 exports.geminiSayHi = functions.https.onRequest(geminiSayHi);
 exports.loginByUserName = functions.https.onRequest(loginByUserName);
 exports.generateHero = functions.https.onRequest(generateHero);
 exports.getHeroes = functions.https.onRequest(getHeroes);
-exports.aiEventEnemy = functions.https.onRequest(aiEventEnemy);
+exports.aiGenerateEvent = functions.https.onRequest(aiGenerateEvent);

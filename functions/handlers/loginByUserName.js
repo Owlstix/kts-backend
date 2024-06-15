@@ -16,9 +16,21 @@ const loginByUserName = async (req, res) => {
     const querySnapshot = await usersRef.where("username", "==", username).get();
 
     if (!querySnapshot.empty) {
-      // User exists, return the document ID
+      // User exists, return the document ID and current world state
       const userDoc = querySnapshot.docs[0];
-      res.status(200).send({id: userDoc.id});
+      const userWorldStateRef = db.collection("userWorldState").doc(userDoc.id);
+      const userWorldStateDoc = await userWorldStateRef.get();
+      if (!userWorldStateDoc.exists) {
+        res.status(404).send({error: "User world state not found"});
+        return;
+      }
+      const userWorldState = userWorldStateDoc.data();
+      res.status(200).send({
+        id: userDoc.id,
+        food: userWorldState.food,
+        supplies: userWorldState.supplies,
+        morale: userWorldState.morale,
+      });
     } else {
       // User does not exist, create a new user document
       const newUserRef = await usersRef.add({
@@ -26,8 +38,22 @@ const loginByUserName = async (req, res) => {
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-      // Return the newly created document ID
-      res.status(200).send({userId: newUserRef.id});
+      // Create a document in userWorldState collection
+      const userWorldStateRef = db.collection("userWorldState").doc(newUserRef.id);
+      await userWorldStateRef.set({
+        userId: newUserRef.id,
+        food: 50,
+        supplies: 50,
+        morale: 50,
+      });
+
+      // Return the newly created document ID and initial world state
+      res.status(200).send({
+        userId: newUserRef.id,
+        food: 50,
+        supplies: 50,
+        morale: 50,
+      });
     }
   } catch (error) {
     console.error("Error in loginByUserName:", error);

@@ -4,7 +4,7 @@ const functions = require("firebase-functions");
 
 const db = admin.firestore();
 
-const aiEventEnemy = async (req, res) => {
+const aiGenerateEvent = async (req, res) => {
   try {
     const heroId = req.query.heroId;
 
@@ -51,8 +51,8 @@ const aiEventEnemy = async (req, res) => {
 
     // Construct the prompt for generating the event and options
     const prompt = `
-    Generate a unique situation for the character with the attributes
-    "${type}", "${name}", "${sex}", ${currentHp}, and ${attack}.
+    Generate a unique situation for the character which has class:
+    "${type}", name:"${name}", "${sex}", current hp:${currentHp}, and attack power${attack}.
     This character is one of the survivors in a cruel dark fantasy world and is
     leaving the village to find food and supplies. Create a story describing what this character
     is doing when they go outside the village, and conclude the story with an
@@ -62,37 +62,27 @@ const aiEventEnemy = async (req, res) => {
     a description of what happened when the hero chose that option, how many hp were lost, 
     and how much supplies and food were found. Ensure that the results describe the
     conclusion of the event with no further story continuation. Ensure everything follows this JSON schema:
-
+    
     {
       "eventSetup": {
         "eventStory": "str",
-        "enemyName": "str",
-        "enemyAttack": "int",
-        "enemyHp": "int"
+        "enemy": {
+          "name": "str",
+          "attack": "int",
+          "hp": "int"
+        }
       },
-      "options": {
-        "option1": "str",
-        "option2": "str",
-        "option3": "str"
-      },
-      "option1Results": {
-        "result": "str",
-        "hpLost": "int",
-        "suppliesFound": "int",
-        "foodFound": "int"
-      },
-      "option2Results": {
-        "result": "str",
-        "hpLost": "int",
-        "suppliesFound": "int",
-        "foodFound": "int"
-      },
-      "option3Results": {
-        "result": "str",
-        "hpLost": "int",
-        "suppliesFound": "int",
-        "foodFound": "int"
-      }
+      "options": [
+        {
+          "option": "str",
+          "result": {
+            "desc": "str",
+            "hpDelta": "int",
+            "suppliesDelta": "int",
+            "foodDelta": "int"
+          }
+        }
+      ]
     }
     `;
 
@@ -139,4 +129,4 @@ const aiEventEnemy = async (req, res) => {
   }
 };
 
-module.exports = {aiEventEnemy};
+module.exports = {aiGenerateEvent};
