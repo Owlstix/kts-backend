@@ -6,32 +6,12 @@ const db = admin.firestore();
 
 const aiGenerateEvent = async (req, res) => {
   try {
-    const heroId = req.query.heroId;
+    const {userId, heroId, currentHp, food, supplies, morale} = req.body;
 
-    if (!heroId) {
-      res.status(400).send({error: "heroId is required"});
+    if (!userId || food === undefined || supplies === undefined || morale === undefined) {
+      res.status(400).send({error: "userId, food, supplies, and morale are required"});
       return;
     }
-
-    // Verify that the hero exists
-    const heroDoc = await db.collection("heroes").doc(heroId).get();
-    if (!heroDoc.exists) {
-      res.status(404).send({error: "Hero not found"});
-      return;
-    }
-
-    const heroData = heroDoc.data();
-    const {type, name, sex, attack} = heroData;
-
-    // Verify that the UserToHero document exists
-    const userToHeroSnapshot = await db.collection("userToHero").where("heroId", "==", heroId).get();
-    if (userToHeroSnapshot.empty) {
-      res.status(404).send({error: "userToHero document not found"});
-      return;
-    }
-
-    const userToHeroData = userToHeroSnapshot.docs[0].data();
-    const currentHp = userToHeroData.currentHp;
 
     // Access the API key from Firebase functions config
     const geminiApiKey = functions.config().gemini.api_key;
@@ -49,42 +29,130 @@ const aiGenerateEvent = async (req, res) => {
       },
     });
 
-    // Construct the prompt for generating the event and options
-    const prompt = `
-    Generate a unique situation for the character which has class:
-    "${type}", name:"${name}", "${sex}", current hp:${currentHp}, and attack power${attack}.
-    This character is one of the survivors in a cruel dark fantasy world and is
-    leaving the village to find food and supplies. Create a story describing what this character
-    is doing when they go outside the village, and conclude the story with an
-    encounter with an enemy. Generate the enemy's name, hp, and attack. After that,
-    provide three options for the hero to choose from. 
-    Finally, generate results for each of those options. The results should include
-    a description of what happened when the hero chose that option, how many hp were lost, 
-    and how much supplies and food were found. Ensure that the results describe the
-    conclusion of the event with no further story continuation. Ensure everything follows this JSON schema:
-    
-    {
-      "eventSetup": {
-        "eventStory": "str",
-        "enemy": {
-          "name": "str",
-          "attack": "int",
-          "hp": "int"
-        }
-      },
-      "options": [
+    let prompt;
+
+    if (heroId && currentHp !== undefined) {
+      // Verify that the hero exists
+      const heroDoc = await db.collection("heroes").doc(heroId).get();
+      if (!heroDoc.exists) {
+        res.status(404).send({error: "Hero not found"});
+        return;
+      }
+
+      const heroData = heroDoc.data();
+      const {type, name, sex, attack} = heroData;
+
+      // Decide which prompt to use (50-50 chance)
+      const useEnemyPrompt = Math.random() < 0.5;
+
+      // Construct the appropriate prompt
+      prompt = useEnemyPrompt ?
+        `
+        Generate a unique situation for the character which has 
+        Class: "${type}"
+        Name: "${name}" 
+        Sex: "${sex}"
+        Current HP: ${currentHp}
+        Attack Power ${attack}
+        This character is one of the survivors in a cruel dark fantasy world and is
+        leaving the village to find food and supplies. Create a story describing what this character
+        is doing when they go outside the village, and conclude the story with an
+        encounter with an enemy. Generate the enemy's name, hp, and attack. After that,
+        provide three options for the hero to choose from.
+        Finally, generate results for each of those options. The results should include
+        a description of what happened when the hero chose that option, how many hp were lost,
+        and how much supplies and food were found. Ensure that the results describe the
+        conclusion of the event with no further story continuation. Ensure everything follows this JSON schema:
+
         {
-          "option": "str",
-          "result": {
-            "desc": "str",
-            "hpDelta": "int",
-            "suppliesDelta": "int",
-            "foodDelta": "int"
-          }
+          "eventSetup": {
+            "eventStory": "str",
+            "enemy": {
+              "name": "str",
+              "attack": "int",
+              "hp": "int"
+            }
+          },
+          "options": [
+            {
+              "option": "str",
+              "result": {
+                "desc": "str",
+                "hpDelta": "int",
+                "suppliesDelta": "int",
+                "foodDelta": "int"
+              }
+            }
+          ]
         }
-      ]
+        ` :
+        `
+        Generate a unique situation for the character with the following details:
+        Class: "${type}"
+        Name: "${name}"
+        Sex: "${sex}"
+        Current HP: ${currentHp}
+        Attack Power: ${attack}
+       
+        This character is one of the survivors in a cruel dark fantasy world and is 
+        leaving the village to find food and supplies. Generate an event that does not 
+        include enemy encounters but requires the player to make morally complex choices. 
+        Provide the event story, followed by three options for what the hero can do, and 
+        include a description of the outcome for each option. Each event result should 
+        affect the current HP of the hero, supplies, or food.
+        Ensure everything follows this JSON schema:
+       
+        {
+          "eventSetup": {
+            "eventStory": "str"
+          },
+          "options": [
+            {
+              "option": "str",
+              "result": {
+                "desc": "str",
+                "hpDelta": "int",
+                "suppliesDelta": "int",
+                "foodDelta": "int"
+              }
+            }
+          ]
+        }
+        `;
+    } else {
+      // Construct the village prompt
+      prompt = `
+      Generate a unique event for a village inhabited by heroes in a cruel dark fantasy world.
+      The village has the following attributes:
+      Food: ${food}
+      Supplies: ${supplies}
+      Morale: ${morale}
+
+      Create three distinct and grim event options for the village. 
+      Each option should be unique and potentially cruel.
+      After presenting the options, generate the outcomes for each. 
+      The outcomes should include a detailed description of what happened and 
+      indicate changes in the village's supplies, food, and morale.
+      Ensure that all outputs follow this JSON schema:
+
+      {
+        "eventSetup": {
+          "eventStory": "str"
+        },
+        "options": [
+          {
+            "option": "str",
+            "result": {
+              "desc": "str",
+              "suppliesDelta": "int",
+              "foodDelta": "int",
+              "moraleDelta": "int"
+            }
+          }
+        ]
+      }
+      `;
     }
-    `;
 
     // Generate content using the Gemini AI model
     const result = await model.generateContent(prompt);
