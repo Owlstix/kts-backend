@@ -35,8 +35,8 @@ const getHeroes = async (req, res) => {
         name: heroData.name,
         bio: heroData.bio,
         attack: heroData.attack,
-        current_hp: userToHeroData.current_hp,
-        max_hp: heroData.max_hp,
+        currentHp: userToHeroData.currentHp,
+        maxHp: heroData.maxHp,
         tier: heroData.tier,
         type: heroData.type,
       };

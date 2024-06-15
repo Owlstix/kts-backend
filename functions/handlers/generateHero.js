@@ -125,7 +125,7 @@ const generateHero = async (req, res) => {
       sex,
       tier,
       type,
-      max_hp: maxHP,
+      maxHp: maxHP,
       attack,
       name,
       bio,
@@ -139,7 +139,7 @@ const generateHero = async (req, res) => {
     const userToHero = {
       heroId: heroRef.id,
       userId: userId,
-      current_hp: maxHP,
+      currentHp: maxHP,
     };
 
     // Store the relationship in Firestore
