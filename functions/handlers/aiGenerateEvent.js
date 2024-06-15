@@ -31,7 +31,7 @@ const aiGenerateEvent = async (req, res) => {
     }
 
     const userToHeroData = userToHeroSnapshot.docs[0].data();
-    const currentHp = userToHeroData.current_hp;
+    const currentHp = userToHeroData.currentHp;
 
     // Access the API key from Firebase functions config
     const geminiApiKey = functions.config().gemini.api_key;
