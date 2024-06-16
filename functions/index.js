@@ -5,15 +5,15 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 
 // Import functions
-const {geminiSayHi} = require("./handlers/geminiTest");
 const {loginByUserName} = require("./handlers/loginByUserName");
 const {generateHero} = require("./handlers/generateHero");
 const {getHeroes} = require("./handlers/getHeroes");
 const {aiGenerateEvent} = require("./handlers/aiGenerateEvent");
+const {updateUserState} = require("./handlers/updateUserState");
 
 // Export functions
-exports.geminiSayHi = functions.https.onRequest(geminiSayHi);
 exports.loginByUserName = functions.https.onRequest(loginByUserName);
 exports.generateHero = functions.https.onRequest(generateHero);
 exports.getHeroes = functions.https.onRequest(getHeroes);
 exports.aiGenerateEvent = functions.https.onRequest(aiGenerateEvent);
+exports.updateUserState = functions.https.onRequest(updateUserState);
