@@ -30,19 +30,25 @@ const getHeroes = async (req, res) => {
 
       const heroData = heroDoc.data();
 
-      return {
-        heroId: heroId,
-        name: heroData.name,
-        bio: heroData.bio,
-        attack: heroData.attack,
-        currentHp: userToHeroData.currentHp,
-        maxHp: heroData.maxHp,
-        tier: heroData.tier,
-        type: heroData.type,
-      };
+      if (userToHeroData.currentHp > 0) {
+        return {
+          heroId: heroId,
+          name: heroData.name,
+          bio: heroData.bio,
+          attack: heroData.attack,
+          currentHp: userToHeroData.currentHp,
+          maxHp: heroData.maxHp,
+          tier: heroData.tier,
+          type: heroData.type,
+        };
+      } else {
+        return null;
+      }
     });
 
-    const heroes = await Promise.all(heroPromises);
+    let heroes = await Promise.all(heroPromises);
+    // Filter out any null values (heroes with currentHp <= 0)
+    heroes = heroes.filter((hero) => hero !== null);
 
     res.status(200).send({heroes});
   } catch (error) {
