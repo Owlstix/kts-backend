@@ -34,6 +34,7 @@ const loginByUserName = async (req, res) => {
           food: userWorldState.food,
           supplies: userWorldState.supplies,
           morale: userWorldState.morale,
+          passedTutorial: userWorldState.passedTutorial,
         },
       });
     } else {
@@ -50,6 +51,7 @@ const loginByUserName = async (req, res) => {
         food: 50,
         supplies: 50,
         morale: 50,
+        passedTutorial: false, // Initialize passedTutorial as false
       });
 
       // Return the newly created document ID and initial world state
@@ -59,9 +61,10 @@ const loginByUserName = async (req, res) => {
           name: username,
         },
         world: {
-          morale: 50,
-          supplies: 50,
           food: 50,
+          supplies: 50,
+          morale: 50,
+          passedTutorial: false,
         },
       });
     }
