@@ -74,13 +74,16 @@ const generateHero = async (req, res) => {
 
     // Prompt for generating name and bio
     const prompt = `
-    Generate a name and bio for a ${sex} hero of class ${type}. Bio should be not more than 50 words.
+    Generate a name and bio for a 
+    ${sex} 
+    hero of class ${type} 
+    set in a dark fantasy world. This is a cruel world where everyone tries to survive after a mysterious calamity. 
+    The bio should be not exceeding 100 words. Use the following JSON schema:
 
-    Using this JSON schema:
-
-    Hero = {"name": str, "bio": str}
-
-    Return a \`Hero\`.
+    {
+      "name": "string",
+      "bio": "string"
+    }
     `;
 
     // Generate content using the Gemini AI model
