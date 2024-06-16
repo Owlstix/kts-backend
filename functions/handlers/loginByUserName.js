@@ -26,10 +26,15 @@ const loginByUserName = async (req, res) => {
       }
       const userWorldState = userWorldStateDoc.data();
       res.status(200).send({
-        id: userDoc.id,
-        food: userWorldState.food,
-        supplies: userWorldState.supplies,
-        morale: userWorldState.morale,
+        user: {
+          id: userDoc.id,
+          name: username,
+        },
+        world: {
+          food: userWorldState.food,
+          supplies: userWorldState.supplies,
+          morale: userWorldState.morale,
+        },
       });
     } else {
       // User does not exist, create a new user document
@@ -49,10 +54,15 @@ const loginByUserName = async (req, res) => {
 
       // Return the newly created document ID and initial world state
       res.status(200).send({
-        userId: newUserRef.id,
-        food: 50,
-        supplies: 50,
-        morale: 50,
+        user: {
+          id: newUserRef.id,
+          name: username,
+        },
+        world: {
+          morale: 50,
+          supplies: 50,
+          food: 50,
+        },
       });
     }
   } catch (error) {
