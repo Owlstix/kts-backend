@@ -4,7 +4,7 @@ const db = admin.firestore();
 
 const loginByUserName = async (req, res) => {
   try {
-    const username = req.query.username;
+    const {username} = req.body;
 
     if (!username) {
       res.status(400).send({error: "Username is required"});

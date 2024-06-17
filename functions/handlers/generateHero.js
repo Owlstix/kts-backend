@@ -2,29 +2,18 @@ const admin = require("firebase-admin");
 const {GoogleGenerativeAI} = require("@google/generative-ai");
 const functions = require("firebase-functions");
 const {
-  TIER_RARITY,
-  TIER_MULTIPLIER,
-  HP_RANGE,
-  ATTACK_RANGE,
+  TIER,
+  TYPE,
+  TIER_PROPERTIES,
+  GENDER,
+  Hero,
 } = require("../utils/constants");
 
 const db = admin.firestore();
 
-const generateRandomValue = (options, probabilities) => {
-  const random = Math.random();
-  let sum = 0;
-  for (let i = 0; i < options.length; i++) {
-    sum += probabilities[i];
-    if (random <= sum) {
-      return options[i];
-    }
-  }
-  return options[options.length - 1];
-};
-
 const generateHero = async (req, res) => {
   try {
-    const userId = req.query.userId;
+    const {userId} = req.body;
 
     if (!userId) {
       res.status(400).send({error: "userId is required"});
@@ -39,21 +28,23 @@ const generateHero = async (req, res) => {
     }
 
     // Randomly generate hero attributes
-    const sex = Math.random() < 0.5 ? "male" : "female";
-    const tier = generateRandomValue(["B-Tier", "A-Tier", "S-Tier"], TIER_RARITY);
-    const type = generateRandomValue(["fighter", "killer", "mage"], [0.33, 0.33, 0.34]);
+    const gender = Hero.generateRandomGender();
+    const tier =
+       Hero.generateRandomValueFromProbabilities(Object.values(TIER),
+           Object.values(TIER_PROPERTIES).map((t) => t.rarity));
 
-    const tierMultiplierValue = TIER_MULTIPLIER[tier];
+    // Here we are understanding how many classess dowe have to identify probability dynamically
+    const typeKeys = Object.keys(TYPE);
+    const equalProbability = 1 / typeKeys.length;
+    const equalProbabilities = new Array(typeKeys.length).fill(equalProbability);
 
-    const maxHP = Math.floor(
-        (Math.random() * (HP_RANGE[type].max - HP_RANGE[type].min + 1)) +
-      HP_RANGE[type].min,
-    ) * tierMultiplierValue;
+    const type = Hero.generateRandomValueFromProbabilities(
+        Object.values(TYPE),
+        equalProbabilities,
+    );
 
-    const attack = Math.floor(
-        (Math.random() * (ATTACK_RANGE[type].max - ATTACK_RANGE[type].min + 1)) +
-      ATTACK_RANGE[type].min,
-    ) * tierMultiplierValue;
+    // Create hero using Hero class
+    const hero = Hero.createHero(gender, tier, type, "", "");
 
     // Access the API key from Firebase functions config
     const geminiApiKey = functions.config().gemini.api_key;
@@ -65,7 +56,6 @@ const generateHero = async (req, res) => {
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
       generationConfig: {
-        maxOutputTokens: 100,
         temperature: 0.7,
         top_p: 0.9,
         top_k: 50,
@@ -75,8 +65,8 @@ const generateHero = async (req, res) => {
     // Prompt for generating name and bio
     const prompt = `
     Generate a name and bio for a 
-    ${sex} 
-    hero of class ${type} 
+    ${Object.keys(GENDER)[gender].toLowerCase()} 
+    hero of class ${Object.keys(TYPE)[type].toLowerCase()} 
     set in a dark fantasy world. This is a cruel world where everyone tries to survive after a mysterious calamity. 
     The bio should be not exceeding 100 words. Use the following JSON schema:
 
@@ -123,33 +113,31 @@ const generateHero = async (req, res) => {
 
     const {name, bio} = heroData;
 
-    // Create the hero object
-    const hero = {
-      sex,
-      tier,
-      type,
-      maxHp: maxHP,
-      attack,
-      name,
-      bio,
+    // Assign name and bio to hero
+    hero.name = name;
+    hero.bio = bio;
+
+    // Add additional properties to hero object
+    const heroWithTimestamp = {
+      ...hero,
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
     };
 
     // Store the hero in Firestore
-    const heroRef = await db.collection("heroes").add(hero);
+    const heroRef = await db.collection("heroes").add(heroWithTimestamp);
 
     // Create the userToHero relationship
     const userToHero = {
       heroId: heroRef.id,
       userId: userId,
-      currentHp: maxHP,
+      currentHp: hero.maxHp,
     };
 
     // Store the relationship in Firestore
     const userToHeroRef = await db.collection("userToHero").add(userToHero);
 
     // Send the response back to the client
-    res.status(200).send({heroId: heroRef.id, userToHeroId: userToHeroRef.id, ...hero});
+    res.status(200).send({heroId: heroRef.id, userToHeroId: userToHeroRef.id, ...heroWithTimestamp});
   } catch (error) {
     console.error("Error generating hero:", error);
     res.status(500).send({error: "Error generating hero", details: error.message});
