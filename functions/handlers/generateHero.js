@@ -3,7 +3,7 @@ const {GoogleGenerativeAI} = require("@google/generative-ai");
 const functions = require("firebase-functions");
 const {
   TIER,
-  TYPE,
+  HERO_TYPE,
   TIER_PROPERTIES,
   GENDER,
   Hero,
@@ -34,17 +34,14 @@ const generateHero = async (req, res) => {
            Object.values(TIER_PROPERTIES).map((t) => t.rarity));
 
     // Here we are understanding how many classess dowe have to identify probability dynamically
-    const typeKeys = Object.keys(TYPE);
+    const typeKeys = Object.keys(HERO_TYPE);
     const equalProbability = 1 / typeKeys.length;
     const equalProbabilities = new Array(typeKeys.length).fill(equalProbability);
 
     const type = Hero.generateRandomValueFromProbabilities(
-        Object.values(TYPE),
+        Object.values(HERO_TYPE),
         equalProbabilities,
     );
-
-    // Create hero using Hero class
-    const hero = Hero.createHero(gender, tier, type, "", "");
 
     // Access the API key from Firebase functions config
     const geminiApiKey = functions.config().gemini.api_key;
@@ -55,10 +52,17 @@ const generateHero = async (req, res) => {
     // Initialize the generative model
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
+      systemInstruction: `
+        You are narrator in a text-based game that takes place in a dark fantasy setting. 
+        Game will be spinning around village with surviving heroes in this cruel world. 
+        You will be asked to narrate events for the village and heroes, generate interesting,
+        mysterious biographies for heroes. 
+        You should be fair narrator, sometimes cruel, sometimes kind, but always interesting.
+      `,
       generationConfig: {
-        temperature: 0.7,
+        temperature: 1,
         top_p: 0.9,
-        top_k: 50,
+        top_k: 40,
       },
     });
 
@@ -66,7 +70,7 @@ const generateHero = async (req, res) => {
     const prompt = `
     Generate a name and bio for a 
     ${Object.keys(GENDER)[gender].toLowerCase()} 
-    hero of class ${Object.keys(TYPE)[type].toLowerCase()} 
+    hero of class ${Object.keys(HERO_TYPE)[type].toLowerCase()} 
     set in a dark fantasy world. This is a cruel world where everyone tries to survive after a mysterious calamity. 
     The bio should be not exceeding 100 words. Use the following JSON schema:
 
@@ -113,9 +117,8 @@ const generateHero = async (req, res) => {
 
     const {name, bio} = heroData;
 
-    // Assign name and bio to hero
-    hero.name = name;
-    hero.bio = bio;
+    // Create hero using Hero class
+    const hero = Hero.create(gender, tier, type, name, bio);
 
     // Add additional properties to hero object
     const heroWithTimestamp = {
@@ -126,6 +129,8 @@ const generateHero = async (req, res) => {
     // Store the hero in Firestore
     const heroRef = await db.collection("heroes").add(heroWithTimestamp);
 
+    hero.id = heroRef.id;
+
     // Create the userToHero relationship
     const userToHero = {
       heroId: heroRef.id,
@@ -134,10 +139,10 @@ const generateHero = async (req, res) => {
     };
 
     // Store the relationship in Firestore
-    const userToHeroRef = await db.collection("userToHero").add(userToHero);
+    await db.collection("userToHero").add(userToHero);
 
     // Send the response back to the client
-    res.status(200).send({heroId: heroRef.id, userToHeroId: userToHeroRef.id, ...heroWithTimestamp});
+    res.status(200).send(hero);
   } catch (error) {
     console.error("Error generating hero:", error);
     res.status(500).send({error: "Error generating hero", details: error.message});

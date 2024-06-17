@@ -1,4 +1,5 @@
 const admin = require("firebase-admin");
+const {Hero} = require("../utils/constants");
 
 const db = admin.firestore();
 
@@ -31,17 +32,17 @@ const getHeroes = async (req, res) => {
       const heroData = heroDoc.data();
 
       if (userToHeroData.currentHp > 0) {
-        return {
-          heroId: heroId,
-          name: heroData.name,
-          bio: heroData.bio,
-          attack: heroData.attack,
-          currentHp: userToHeroData.currentHp,
-          maxHp: heroData.maxHp,
-          tier: heroData.tier,
-          type: heroData.type,
-          gender: heroData.gender,
-        };
+        return new Hero(
+            heroId,
+            heroData.gender,
+            heroData.tier,
+            heroData.type,
+            heroData.maxHp,
+            userToHeroData.currentHp,
+            heroData.attack,
+            heroData.name,
+            heroData.bio,
+        );
       } else {
         return null;
       }

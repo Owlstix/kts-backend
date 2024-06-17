@@ -1,23 +1,26 @@
-
 /**
  * Class representing a Hero.
  */
 class Hero {
   /**
    * Create a hero.
+   * @param {string} id - The id of the hero doc.
    * @param {number} gender - The gender of the hero.
    * @param {number} tier - The tier of the hero.
    * @param {number} type - The type of the hero.
    * @param {number} maxHp - The maximum HP of the hero.
+   * @param {number} currentHp - The current HP of the hero.
    * @param {number} attack - The attack value of the hero.
    * @param {string} name - The name of the hero.
    * @param {string} bio - The biography of the hero.
    */
-  constructor(gender, tier, type, maxHp, attack, name, bio) {
+  constructor(id, gender, tier, type, maxHp, currentHp, attack, name, bio) {
+    this.id = id;
     this.gender = gender;
     this.tier = tier;
     this.type = type;
     this.maxHp = maxHp;
+    this.currentHp = currentHp;
     this.attack = attack;
     this.name = name;
     this.bio = bio;
@@ -69,14 +72,18 @@ class Hero {
    * @param {string} bio - The biography of the hero.
    * @return {Hero} - The newly created hero.
    */
-  static createHero(gender, tier, type, name, bio) {
+  static create(gender, tier, type, name, bio) {
     const tierProps = TIER_PROPERTIES[tier];
-    const typeProps = TYPE_PROPERTIES[type];
+    const typeProps = HERO_TYPE_PROPERTIES[type];
 
     const maxHp = Hero.generateRandomValueInRange(typeProps.hp.min, typeProps.hp.max) * tierProps.multiplier;
+    const currentHp = maxHp;
     const attack = Hero.generateRandomValueInRange(typeProps.attack.min, typeProps.attack.max) * tierProps.multiplier;
 
-    return new Hero(gender, tier, type, maxHp, attack, name, bio);
+    // As this is a creation of a New Hero we do not have id yet, id will be granted after record in Firebase is done
+    const hero = new Hero("", gender, tier, type, maxHp, currentHp, attack, name, bio);
+    delete hero.id;
+    return hero;
   }
 }
 
@@ -86,7 +93,7 @@ const TIER = {
   B: 2,
 };
 
-const TYPE = {
+const HERO_TYPE = {
   FIGHTER: 0,
   ASSASSIN: 1,
   MAGE: 2,
@@ -112,16 +119,16 @@ const TIER_PROPERTIES = {
   },
 };
 
-const TYPE_PROPERTIES = {
-  [TYPE.FIGHTER]: {
+const HERO_TYPE_PROPERTIES = {
+  [HERO_TYPE.FIGHTER]: {
     hp: {min: 700, max: 1000},
     attack: {min: 30, max: 50},
   },
-  [TYPE.ASSASSIN]: {
+  [HERO_TYPE.ASSASSIN]: {
     hp: {min: 500, max: 700},
     attack: {min: 50, max: 70},
   },
-  [TYPE.MAGE]: {
+  [HERO_TYPE.MAGE]: {
     hp: {min: 350, max: 500},
     attack: {min: 70, max: 100},
   },
@@ -129,9 +136,9 @@ const TYPE_PROPERTIES = {
 
 module.exports = {
   TIER,
-  TYPE,
+  HERO_TYPE,
   GENDER,
   TIER_PROPERTIES,
-  TYPE_PROPERTIES,
+  HERO_TYPE_PROPERTIES,
   Hero,
 };

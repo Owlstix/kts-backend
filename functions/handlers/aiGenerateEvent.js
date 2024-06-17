@@ -1,7 +1,7 @@
 const admin = require("firebase-admin");
 const {GoogleGenerativeAI} = require("@google/generative-ai");
 const functions = require("firebase-functions");
-const {TYPE, GENDER} = require("../utils/constants");
+const {HERO_TYPE, GENDER} = require("../utils/constants");
 
 const db = admin.firestore();
 
@@ -23,10 +23,17 @@ const aiGenerateEvent = async (req, res) => {
     // Initialize the generative model
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
+      systemInstruction: `
+        You are narrator in a text-based game that takes place in a dark fantasy setting. 
+        Game will be spinning around village with surviving heroes in this cruel world. 
+        You will be asked to narrate events for the village and heroes, generate interesting,
+        mysterious biographies for heroes. 
+        You should be fair narrator, sometimes cruel, sometimes kind, but always interesting.
+      `,
       generationConfig: {
-        temperature: 0.7,
+        temperature: 1,
         top_p: 0.9,
-        top_k: 50,
+        top_k: 40,
       },
     });
 
@@ -50,7 +57,7 @@ const aiGenerateEvent = async (req, res) => {
       prompt = useEnemyPrompt ?
         `
         Generate a unique situation for the character which has 
-        Class: ${Object.keys(TYPE)[type]} 
+        Class: ${Object.keys(HERO_TYPE)[type]} 
         Name: "${name}" 
         Gender: ${Object.keys(GENDER)[gender].toLowerCase()} 
         Current HP: ${currentHp}
@@ -89,7 +96,7 @@ const aiGenerateEvent = async (req, res) => {
         ` :
         `
         Generate a unique situation for the character with the following details:
-        Class: ${Object.keys(TYPE)[type]}
+        Class: ${Object.keys(HERO_TYPE)[type]}
         Name: "${name}"
         Gender: ${Object.keys(GENDER)[gender].toLowerCase()} 
         Current HP: ${currentHp}
@@ -123,7 +130,8 @@ const aiGenerateEvent = async (req, res) => {
     } else {
       // Construct the village prompt
       prompt = `
-      Generate a unique event for a village inhabited by heroes in a cruel dark fantasy world.
+      Generate a unique event for a village inhabited by heroes in a cruel dark fantasy world. You should create 
+      a situation where the village is facing a crisis and the heroes must make a difficult decision.
       The village has the following attributes:
       Food: ${food}
       Supplies: ${supplies}
