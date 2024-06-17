@@ -1,6 +1,7 @@
 const admin = require("firebase-admin");
 const {GoogleGenerativeAI} = require("@google/generative-ai");
 const functions = require("firebase-functions");
+const {TYPE, GENDER} = require("../utils/constants");
 
 const db = admin.firestore();
 
@@ -40,7 +41,7 @@ const aiGenerateEvent = async (req, res) => {
       }
 
       const heroData = heroDoc.data();
-      const {type, name, sex, attack} = heroData;
+      const {type, name, gender, attack} = heroData;
 
       // Decide which prompt to use (50-50 chance)
       const useEnemyPrompt = Math.random() < 0.5;
@@ -49,9 +50,9 @@ const aiGenerateEvent = async (req, res) => {
       prompt = useEnemyPrompt ?
         `
         Generate a unique situation for the character which has 
-        Class: "${type}"
+        Class: ${Object.keys(TYPE)[type]} 
         Name: "${name}" 
-        Sex: "${sex}"
+        Gender: ${Object.keys(GENDER)[gender].toLowerCase()} 
         Current HP: ${currentHp}
         Attack Power ${attack}
         This character is one of the survivors in a cruel dark fantasy world and is
@@ -88,9 +89,9 @@ const aiGenerateEvent = async (req, res) => {
         ` :
         `
         Generate a unique situation for the character with the following details:
-        Class: "${type}"
+        Class: ${Object.keys(TYPE)[type]}
         Name: "${name}"
-        Sex: "${sex}"
+        Gender: ${Object.keys(GENDER)[gender].toLowerCase()} 
         Current HP: ${currentHp}
         Attack Power: ${attack}
        

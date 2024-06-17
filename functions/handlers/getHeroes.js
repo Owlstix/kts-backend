@@ -40,6 +40,7 @@ const getHeroes = async (req, res) => {
           maxHp: heroData.maxHp,
           tier: heroData.tier,
           type: heroData.type,
+          gender: heroData.gender,
         };
       } else {
         return null;
