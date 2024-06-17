@@ -7,7 +7,7 @@ const loginByUserName = async (req, res) => {
     const {username} = req.body;
 
     if (!username) {
-      res.status(400).send({error: "Username is required"});
+      res.status(400).send({error: "Username is required", body: req.body});
       return;
     }
 
