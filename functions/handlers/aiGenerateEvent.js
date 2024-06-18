@@ -1,7 +1,7 @@
 const admin = require("firebase-admin");
 const {GoogleGenerativeAI} = require("@google/generative-ai");
 const functions = require("firebase-functions");
-const {HERO_TYPE, GENDER} = require("../utils/constants");
+const {HERO_TYPE, GENDER} = require("../types/types");
 
 const db = admin.firestore();
 

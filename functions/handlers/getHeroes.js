@@ -1,5 +1,5 @@
 const admin = require("firebase-admin");
-const {Hero} = require("../utils/constants");
+const {Hero} = require("../types/hero");
 
 const db = admin.firestore();
 
