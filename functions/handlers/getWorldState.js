@@ -10,14 +10,16 @@ const getWorldState = async (req, res) => {
       return;
     }
 
-    // Get the user's world state
-    const userWorldStateRef = db.collection("userWorldState").doc(userId);
-    const userWorldStateDoc = await userWorldStateRef.get();
+    // Find the document ID that corresponds to the user ID
+    const userWorldStateQuery = await db.collection("userWorldState").where("userId", "==", userId).get();
 
-    if (!userWorldStateDoc.exists) {
+    if (userWorldStateQuery.empty) {
       res.status(404).send({error: "User world state not found", world: null});
       return;
     }
+
+    // Get the first document from the query result
+    const userWorldStateDoc = userWorldStateQuery.docs[0];
 
     const userWorldState = userWorldStateDoc.data();
     res.status(200).send({
