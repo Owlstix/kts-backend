@@ -14,7 +14,6 @@ const updateUserState = async (req, res) => {
     // Update world state if provided
     if (world) {
       const {morale, supplies, food, passedTutorial} = world;
-
       const userWorldStateSnapshot = await db.collection("userWorldState")
           .where("userId", "==", userId)
           .get();
@@ -37,7 +36,7 @@ const updateUserState = async (req, res) => {
       };
 
       if (Object.keys(worldUpdate).length > 0) {
-        await worldRef.set(worldUpdate, {merge: true});
+        await worldRef.set(worldUpdate);
       }
     }
 
