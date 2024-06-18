@@ -14,7 +14,18 @@ const updateUserState = async (req, res) => {
     // Update world state if provided
     if (world) {
       const {morale, supplies, food, passedTutorial} = world;
-      const worldRef = db.collection("userWorldState").doc(); // Firestore generates a unique ID
+      const userWorldStateSnapshot = await db.collection("userWorldState")
+          .where("userId", "==", userId)
+          .get();
+
+      let worldRef;
+      if (!userWorldStateSnapshot.empty) {
+        // If userWorldState exists, get the document reference
+        worldRef = userWorldStateSnapshot.docs[0].ref;
+      } else {
+        // If not, create a new document reference
+        worldRef = db.collection("userWorldState").doc();
+      }
 
       const worldUpdate = {
         userId, // Include userId in the update
