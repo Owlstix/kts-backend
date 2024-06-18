@@ -138,21 +138,17 @@ const generateHero = async (req, res) => {
     const userToHero = {
       heroId: heroRef.id,
       userId: userId,
-      currentHp: hero.maxHp,
+      currentHp: hero.currentHp,
     };
 
     // Store the relationship in Firestore
     await db.collection("userToHero").add(userToHero);
 
-    // Combine hero data with userToHero data for the response
-    const responseHero = {
-      ...heroWithTimestamp,
-      id: heroRef.id,
-      currentHp: userToHero.currentHp,
-    };
+    // Assign the hero ID to the response object
+    hero.id = heroRef.id;
 
     // Send the response back to the client
-    res.status(200).send(responseHero);
+    res.status(200).send({hero});
   } catch (error) {
     console.error("Error generating hero:", error);
     res.status(500).send({error: "Error generating hero", details: error.message});
