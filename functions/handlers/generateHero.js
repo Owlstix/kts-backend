@@ -2,12 +2,11 @@ const admin = require("firebase-admin");
 const {GoogleGenerativeAI} = require("@google/generative-ai");
 const functions = require("firebase-functions");
 const {
-  TIER,
-  HERO_TYPE,
-  TIER_PROPERTIES,
-  GENDER,
-  Hero,
-} = require("../utils/constants");
+  generateRandomValueFromProbabilities,
+  generateRandomGender,
+} = require("../utils/utils");
+const {TIER, HERO_TYPE, TIER_PROPERTIES, GENDER} = require("../types/types");
+const Hero = require("../types/hero");
 
 const db = admin.firestore();
 
@@ -28,17 +27,17 @@ const generateHero = async (req, res) => {
     }
 
     // Randomly generate hero attributes
-    const gender = Hero.generateRandomGender();
-    const tier =
-       Hero.generateRandomValueFromProbabilities(Object.values(TIER),
-           Object.values(TIER_PROPERTIES).map((t) => t.rarity));
+    const gender = generateRandomGender();
+    const tier = generateRandomValueFromProbabilities(
+        Object.values(TIER),
+        Object.values(TIER_PROPERTIES).map((t) => t.rarity),
+    );
 
-    // Here we are understanding how many classess dowe have to identify probability dynamically
     const typeKeys = Object.keys(HERO_TYPE);
     const equalProbability = 1 / typeKeys.length;
     const equalProbabilities = new Array(typeKeys.length).fill(equalProbability);
 
-    const type = Hero.generateRandomValueFromProbabilities(
+    const type = generateRandomValueFromProbabilities(
         Object.values(HERO_TYPE),
         equalProbabilities,
     );
@@ -120,16 +119,20 @@ const generateHero = async (req, res) => {
     // Create hero using Hero class
     const hero = Hero.create(gender, tier, type, name, bio);
 
-    // Add additional properties to hero object
+    // Add additional properties to hero object (excluding currentHp)
     const heroWithTimestamp = {
-      ...hero,
+      gender: hero.gender,
+      tier: hero.tier,
+      type: hero.type,
+      maxHp: hero.maxHp,
+      attack: hero.attack,
+      name: hero.name,
+      bio: hero.bio,
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
     };
 
     // Store the hero in Firestore
     const heroRef = await db.collection("heroes").add(heroWithTimestamp);
-
-    hero.id = heroRef.id;
 
     // Create the userToHero relationship
     const userToHero = {
@@ -141,8 +144,15 @@ const generateHero = async (req, res) => {
     // Store the relationship in Firestore
     await db.collection("userToHero").add(userToHero);
 
+    // Combine hero data with userToHero data for the response
+    const responseHero = {
+      ...heroWithTimestamp,
+      id: heroRef.id,
+      currentHp: userToHero.currentHp,
+    };
+
     // Send the response back to the client
-    res.status(200).send(hero);
+    res.status(200).send(responseHero);
   } catch (error) {
     console.error("Error generating hero:", error);
     res.status(500).send({error: "Error generating hero", details: error.message});
