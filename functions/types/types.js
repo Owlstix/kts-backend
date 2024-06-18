@@ -21,11 +21,11 @@ const TIER_PROPERTIES = {
     multiplier: 2,
   },
   [TIER.A]: {
-    rarity: 0.25,
+    rarity: 0.15,
     multiplier: 1.5,
   },
   [TIER.B]: {
-    rarity: 0.7,
+    rarity: 0.8,
     multiplier: 1,
   },
 };
