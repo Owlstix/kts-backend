@@ -1,3 +1,4 @@
+// askChatGpt.js
 const functions = require("firebase-functions");
 const {OpenAI} = require("openai");
 
@@ -6,9 +7,8 @@ const openai = new OpenAI({
   apiKey: functions.config().openai.api_key,
 });
 
-// Create the Firebase function to interact with the assistant
-const askChatGpt = functions.https.onRequest(async (req, res) => {
-  const userMessage = req.body.message || "Tell me about the latest features in GPT-4o.";
+const askChatGpt = async (req, res) => {
+  const userMessage = req.body.message;
 
   try {
     // Create a completion request
@@ -27,6 +27,6 @@ const askChatGpt = functions.https.onRequest(async (req, res) => {
     console.error("Error fetching response:", error);
     res.status(500).send({error: "Internal Server Error", details: error.message});
   }
-});
+};
 
 module.exports = {askChatGpt};
