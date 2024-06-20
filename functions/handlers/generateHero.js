@@ -1,12 +1,12 @@
 const admin = require("firebase-admin");
-const {GoogleGenerativeAI} = require("@google/generative-ai");
-const functions = require("firebase-functions");
 const {
   generateRandomValueFromProbabilities,
   generateRandomGender,
 } = require("../utils/utils");
 const {TIER, HERO_TYPE, TIER_PROPERTIES, GENDER} = require("../types/types");
 const Hero = require("../types/hero");
+const askGemini = require("../aiProviders/askGemini");
+const {geminiSystemInstruction, heroGeneratePrompt} = require("../constants/prompts");
 
 const db = admin.firestore();
 
@@ -42,77 +42,12 @@ const generateHero = async (req, res) => {
         equalProbabilities,
     );
 
-    // Access the API key from Firebase functions config
-    const geminiApiKey = functions.config().gemini.api_key;
+    // Prepare the prompt for generating name and bio
+    const prompt = heroGeneratePrompt(Object.keys(GENDER)[gender].toLowerCase(),
+        Object.keys(HERO_TYPE)[type].toLowerCase());
 
-    // Initialize the GoogleGenerativeAI with the API key
-    const genAI = new GoogleGenerativeAI(geminiApiKey);
-
-    // Initialize the generative model
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      systemInstruction: `
-        You are narrator in a text-based game that takes place in a dark fantasy setting. 
-        Game will be spinning around village with surviving heroes in this cruel world. 
-        You will be asked to narrate events for the village and heroes, generate interesting,
-        mysterious biographies for heroes. 
-        You should be fair narrator, sometimes cruel, sometimes kind, but always interesting.
-      `,
-      generationConfig: {
-        temperature: 1,
-        top_p: 0.9,
-        top_k: 40,
-      },
-    });
-
-    // Prompt for generating name and bio
-    const prompt = `
-    Generate a name and bio for a 
-    ${Object.keys(GENDER)[gender].toLowerCase()} 
-    hero of class ${Object.keys(HERO_TYPE)[type].toLowerCase()} 
-    set in a dark fantasy world. This is a cruel world where everyone tries to survive after a mysterious calamity. 
-    The bio should be not exceeding 100 words. Use the following JSON schema:
-
-    {
-      "name": "string",
-      "bio": "string"
-    }
-    `;
-
-    // Generate content using the Gemini AI model
-    const result = await model.generateContent(prompt);
-
-    // Log the response for debugging purposes
-    console.log("Complete response from Gemini API:", JSON.stringify(result));
-
-    // Extract the relevant data from the response
-    const candidates = result.response.candidates;
-    if (!candidates || candidates.length === 0) {
-      throw new Error("No candidates found in the response from Gemini API.");
-    }
-
-    // Extract text from the first candidate's content parts
-    const contentParts = candidates[0].content.parts;
-    if (!contentParts || contentParts.length === 0) {
-      throw new Error("No content parts found in the candidate response.");
-    }
-
-    let responseText = contentParts.map((part) => part.text).join(" ");
-
-    // Log the response text to see the exact format
-    console.log("Extracted response text from Gemini API:", responseText);
-
-    // Remove the backticks and parse the JSON response
-    responseText = responseText.replace(/```json|```/g, "").trim();
-
-    let heroData;
-    try {
-      heroData = JSON.parse(responseText);
-    } catch (jsonError) {
-      console.error("Error parsing JSON response:", jsonError);
-      res.status(500).send({error: "Error parsing Gemini API response", details: jsonError.message});
-      return;
-    }
+    // Call the askGemini function with the system instruction and generated prompt
+    const heroData = await askGemini(geminiSystemInstruction, prompt);
 
     const {name, bio} = heroData;
 
