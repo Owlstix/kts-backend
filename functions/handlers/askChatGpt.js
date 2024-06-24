@@ -1,4 +1,3 @@
-// askChatGpt.js
 const functions = require("firebase-functions");
 const {OpenAI} = require("openai");
 
