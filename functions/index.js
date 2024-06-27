@@ -13,6 +13,7 @@ const {updateUserState} = require("./handlers/updateUserState");
 const {getWorldState} = require("./handlers/getWorldState");
 const {askChatGpt} = require("./handlers/askChatGpt");
 const {generateImage} = require("./handlers/generateImage");
+const {backfillChibis} = require("./handlers/backfillChibis");
 
 // Export functions
 exports.loginByUserName = functions.https.onRequest(loginByUserName);
@@ -23,5 +24,4 @@ exports.updateUserState = functions.https.onRequest(updateUserState);
 exports.getWorldState = functions.https.onRequest(getWorldState);
 exports.askChatGpt = functions.https.onRequest(askChatGpt);
 exports.generateImage = functions.https.onRequest(generateImage);
-
-
+exports.backfillChibis = functions.https.onRequest(backfillChibis);
