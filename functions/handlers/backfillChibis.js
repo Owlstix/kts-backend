@@ -42,8 +42,10 @@ async function processChibiFile(file) {
       expires: CONFIG.IMAGE_EXPIRY_DATE,
     });
 
-    const description = await generateDescription(signedUrl);
-    const avatarUrl = await generateAvatar(description, chibiIdWithoutExtension);
+    // Pass gender to generateDescription
+    const description = await generateDescription(signedUrl, gender);
+    // Pass gender to generateAvatar along with description and chibiIdWithoutExtension
+    const avatarUrl = await generateAvatar(description, chibiIdWithoutExtension, gender);
 
     await db.collection(CONFIG.FIRESTORE_COLLECTION).doc(chibiIdWithoutExtension).set({
       desc: description,
@@ -59,17 +61,21 @@ async function processChibiFile(file) {
 /**
  * Generates a description for a given image URL using OpenAI.
  * @param {string} imageUrl The URL of the image to generate a description for.
+ * @param {string} gender The gender of the character.
  * @return {Promise<string>} A promise that resolves to the generated description.
  */
-async function generateDescription(imageUrl) {
+async function generateDescription(imageUrl, gender) {
+  const prompt = `Generate description of how this ${gender} character looks,
+    describe as if it was a real person in real life,
+    description should not be more than 100 words long.`;
+  console.log("Sending prompt to OpenAI in generateDescription:", prompt); // Logging the prompt
   const response = await openai.chat.completions.create({
     model: "gpt-4o",
     messages: [
       {
         role: "user",
         content: [
-          {type: "text", text: `Generate description for this character, describe as if it was 
-            a real person in real life, description should not be more than 100 words long.`},
+          {type: "text", text: prompt},
           {type: "image_url", image_url: {url: imageUrl}},
         ],
       },
@@ -83,13 +89,18 @@ async function generateDescription(imageUrl) {
  * Generates an avatar for a given description using OpenAI and stores it in Firebase Storage.
  * @param {string} description The description of the character to generate an avatar for.
  * @param {string} chibiId The ID of the chibi to use for naming the stored file.
+ * @param {string} gender The gender of the character.
  * @return {Promise<string>} A promise that resolves to the URL of the stored avatar.
  */
-async function generateAvatar(description, chibiId) {
+async function generateAvatar(description, chibiId, gender) {
+  const prompt = `${gender} hero: ${description},
+    stands ready for action in a dark fantasy survival world.
+    The background is dark and foreboding, filled with shadows and hints of a desolate, survivalist landscape. 
+    stance and demeanor embody a warrior's spirit, ready for battle.`;
+  console.log("Sending prompt to OpenAI in generateAvatar:", prompt); // Logging the prompt
   const response = await openai.images.generate({
     model: "dall-e-3",
-    prompt: `Generate avatar hero card for this ${description}, 
-    setting dark fantasy survival world, no interface and no text on card and make it non chibi real size character.`,
+    prompt: prompt,
     n: 1,
     size: "1024x1024",
   });
