@@ -9,6 +9,7 @@ const CONFIG = {
   BUCKET_PREFIX: "test",
   IMAGE_EXPIRY_DATE: "03-17-2025",
   FIRESTORE_COLLECTION: "chibis",
+  BATCH_SIZE: 5, // Number of files to process in each batch
 };
 
 const db = admin.firestore();
@@ -62,12 +63,13 @@ async function processChibiFile(file) {
  * Generates a description for a given image URL using OpenAI.
  * @param {string} imageUrl The URL of the image to generate a description for.
  * @param {string} gender The gender of the character.
+ * @param {string} type The type of the character.
  * @return {Promise<string>} A promise that resolves to the generated description.
  */
-async function generateDescription(imageUrl, gender) {
-  const prompt = `Generate description of how this ${gender} character looks,
-    describe as if it was a real person in real life,
-    description should not be more than 100 words long.`;
+async function generateDescription(imageUrl, gender, type) {
+  const prompt = `Generate description of how this ${gender} ${type} character looks,
+    describe exact looks as if it was non-chibi full size darkfantasy character, add dynamical pose description,
+    description should not be more than 150 words long.`;
   console.log("Sending prompt to OpenAI in generateDescription:", prompt); // Logging the prompt
   const response = await openai.chat.completions.create({
     model: "gpt-4o",
@@ -90,13 +92,18 @@ async function generateDescription(imageUrl, gender) {
  * @param {string} description The description of the character to generate an avatar for.
  * @param {string} chibiId The ID of the chibi to use for naming the stored file.
  * @param {string} gender The gender of the character.
+ * @param {string} type The type of the character.
  * @return {Promise<string>} A promise that resolves to the URL of the stored avatar.
  */
-async function generateAvatar(description, chibiId, gender) {
-  const prompt = `${gender} hero: ${description},
-    stands ready for action in a dark fantasy survival world.
-    The background is dark and foreboding, filled with shadows and hints of a desolate, survivalist landscape. 
-    stance and demeanor embody a warrior's spirit, ready for battle.`;
+async function generateAvatar(description, chibiId, gender, type) {
+  const prompt =
+  `Сreate a stunning digital artwork in the style of 'Arcane,' the animated series from League of Legends. 
+  The image should depict a dynamic scene featuring ${gender} ${type} hero, ${description}. 
+  The atmosphere should be intense and dramatic, with intricate details, and rich textures. Use a dark, 
+  moody color palette to capture the unique visual style of Arcane. 
+  The characters should be in mid-action, showcasing their personalities and abilities. 
+  Ensure the composition is visually engaging, with a strong sense of depth and movement. 
+  no text should be used. apply filter on image similar to game "borderlands" style`;
   console.log("Sending prompt to OpenAI in generateAvatar:", prompt); // Logging the prompt
   const response = await openai.images.generate({
     model: "dall-e-3",
@@ -124,11 +131,12 @@ async function generateAvatar(description, chibiId, gender) {
   return `https://storage.googleapis.com/${bucket.name}/${fileName}`;
 }
 
-// Main backfill function
+// Main backfill function with batching
 const backfillChibis = async () => {
   const chibiFiles = await getChibiFiles();
-  for (const file of chibiFiles) {
-    await processChibiFile(file);
+  for (let i = 0; i < chibiFiles.length; i += CONFIG.BATCH_SIZE) {
+    const batch = chibiFiles.slice(i, i + CONFIG.BATCH_SIZE);
+    await Promise.all(batch.map(processChibiFile));
   }
 };
 

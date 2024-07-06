@@ -24,4 +24,7 @@ exports.updateUserState = functions.https.onRequest(updateUserState);
 exports.getWorldState = functions.https.onRequest(getWorldState);
 exports.askChatGpt = functions.https.onRequest(askChatGpt);
 exports.generateImage = functions.https.onRequest(generateImage);
-exports.backfillChibis = functions.https.onRequest(backfillChibis);
+exports.backfillChibis = functions.runWith({
+  timeoutSeconds: 540,
+  memory: "2GB",
+}).https.onRequest(backfillChibis);
