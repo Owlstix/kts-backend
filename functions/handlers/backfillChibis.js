@@ -46,14 +46,13 @@ async function processChibiFile(file) {
     // Pass gender to generateDescription
     const description = await generateDescription(signedUrl, gender);
     // Pass gender to generateAvatar along with description and chibiIdWithoutExtension
-    const avatarUrl = await generateAvatar(description, chibiIdWithoutExtension, gender);
+    await generateAvatar(description, chibiIdWithoutExtension, gender);
 
     await db.collection(CONFIG.FIRESTORE_COLLECTION).doc(chibiIdWithoutExtension).set({
       desc: description,
       gender,
       type,
       tier,
-      imageUrl: avatarUrl,
     });
   }
 }
@@ -68,8 +67,9 @@ async function processChibiFile(file) {
  */
 async function generateDescription(imageUrl, gender, type) {
   const prompt = `Generate description of how this ${gender} ${type} character looks,
-    describe exact looks as if it was non-chibi full size darkfantasy character, add dynamical pose description,
-    description should not be more than 150 words long.`;
+    describe exact looks as if it was non-chibi full size darkfantasy character, 
+    add dynamical pose description, add description of background where this hero stands
+    description should not be more than 200 words long.`;
   console.log("Sending prompt to OpenAI in generateDescription:", prompt); // Logging the prompt
   const response = await openai.chat.completions.create({
     model: "gpt-4o",
