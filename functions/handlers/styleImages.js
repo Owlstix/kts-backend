@@ -87,17 +87,27 @@ async function uploadImageToLeonardo(signedUrl) {
 }
 
 /**
- * Uploads style reference images to Leonardo AI and returns their initImageIds.
+ * Checks if style reference images are already uploaded and returns their initImageIds.
+ * If not, uploads the style reference images and stores their initImageIds in Firestore.
  * @return {Promise<Array>} A promise that resolves to an array of initImageIds.
  */
-async function uploadStyleReferences() {
+async function getOrUploadStyleReferences() {
   const styleRefFiles = await getFiles(CONFIG.STYLE_REFERENCES_FOLDER);
   const styleRefPromises = styleRefFiles.map(async (file) => {
-    const [signedUrl] = await file.getSignedUrl({
-      action: "read",
-      expires: CONFIG.IMAGE_EXPIRY_DATE,
-    });
-    return uploadImageToLeonardo(signedUrl);
+    const fileName = path.basename(file.name, ".png"); // Strip the .png extension for the document ID
+    const styleRefDocRef = db.collection("styleReferenceInitImageId").doc(fileName);
+    const styleRefDoc = await styleRefDocRef.get();
+    if (styleRefDoc.exists) {
+      return styleRefDoc.data().initImageId;
+    } else {
+      const [signedUrl] = await file.getSignedUrl({
+        action: "read",
+        expires: CONFIG.IMAGE_EXPIRY_DATE,
+      });
+      const initImageId = await uploadImageToLeonardo(signedUrl);
+      await styleRefDocRef.set({initImageId});
+      return initImageId;
+    }
   });
   return Promise.all(styleRefPromises);
 }
@@ -210,12 +220,13 @@ const styleImages = async () => {
   const bucket = admin.storage().bucket();
 
   // Upload style references to get their initImageIds
-  const styleRefIds = await uploadStyleReferences();
+  const styleRefIds = await getOrUploadStyleReferences();
   const styleReferences = styleRefIds.map((initImageId, index) => ({
     initImageId,
     initImageType: "UPLOADED",
     preprocessorId: 67,
-    weight: index < 2 ? 0.50 : 0.30, // First two images with weight 0.50, next two with weight 0.30
+    strengthType: "Mid",
+    // weight: index < 2 ? 0.50 : 0.30, // First two images with weight 0.50, next two with weight 0.30
   }));
 
   let imageName;
