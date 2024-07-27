@@ -66,7 +66,7 @@ async function processChibiFile(file) {
  * @return {Promise<string>} A promise that resolves to the generated description.
  */
 async function generateDescription(imageUrl, gender, type) {
-  const prompt = `Generate description of how this ${gender} ${type} character looks,
+  const prompt = `Generate description of how this ${gender} ${type} character: skin color, face details, haircut, hair color.
     describe exact looks as if it was non-chibi full size darkfantasy character, 
     add dynamical pose description, add description of background where this hero stands
     description should not be more than 200 words long.`;

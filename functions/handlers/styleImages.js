@@ -14,7 +14,6 @@ const CONFIG = {
   PREGENERATED_AVATARS_FOLDER: "pregeneratedAvatars",
   STYLE_REFERENCES_FOLDER: "styleReference",
   STYLED_AVATARS_FOLDER: "styledAvatars",
-  BATCH_SIZE: 5, // Number of files to process in each batch
 };
 
 leonardoai.auth(CONFIG.LEONARDO_API_KEY);
@@ -153,7 +152,7 @@ async function processImageWithStyleReferences(file, styleReferences) {
     height: 1024,
     width: 1024,
     modelId: "b24e16ff-06e3-43eb-8d33-4416c2d75876",
-    prompt: "dark fantasy setting hero, dynamic scene, keep colours identical to original image",
+    prompt: "dark fantasy setting character, dynamic scene, keep colours identical to original image",
     presetStyle: "DYNAMIC",
     photoReal: false,
     alchemy: true,
@@ -161,11 +160,11 @@ async function processImageWithStyleReferences(file, styleReferences) {
     // negative_prompt: "dirty face, black lines on face, sketchy face, artifacts on face, dots on face",
     contrastRatio: 1,
     init_image_id: initImageId,
-    init_strength: 0.55,
+    init_strength: 0.90,
     controlnets: styleReferences,
     elements: [{
       akUUID: "12eb63cd-da9e-440a-958d-f09595829256", // Oldschool Comic
-      weight: 0.5,
+      weight: 1.10,
     }],
   });
 
@@ -225,25 +224,22 @@ const styleImages = async () => {
     initImageId,
     initImageType: "UPLOADED",
     preprocessorId: 67,
-    strengthType: "Mid",
+    strengthType: "Max",
     // weight: index < 2 ? 0.50 : 0.30, // First two images with weight 0.50, next two with weight 0.30
   }));
 
-  let imageName;
-  for (let i = 0; i < avatarFiles.length; i += CONFIG.BATCH_SIZE) {
-    const batch = avatarFiles.slice(i, i + CONFIG.BATCH_SIZE);
-    await Promise.all(batch.map(async (file) => {
-      imageName = path.basename(file.name); // Correctly define imageName based on the current file
-      const styledFileName = `${CONFIG.STYLED_AVATARS_FOLDER}/${imageName}`;
-      const [fileExists] = await bucket.file(styledFileName).exists();
+  for (const file of avatarFiles) {
+    const imageName = path.basename(file.name);
+    const styledFileName = `${CONFIG.STYLED_AVATARS_FOLDER}/${imageName}`;
+    const [fileExists] = await bucket.file(styledFileName).exists();
 
-      if (!fileExists) {
-        // Only process the image if it doesn't already exist in the styledAvatars folder
-        return processImageWithStyleReferences(file, styleReferences);
-      } else {
-        console.log(`Skipping ${imageName}, already exists in styledAvatars folder.`);
-      }
-    }));
+    if (!fileExists) {
+      // Only process the image if it doesn't already exist in the styledAvatars folder
+      await processImageWithStyleReferences(file, styleReferences);
+      break; // Stop after processing one image fully
+    } else {
+      console.log(`Skipping ${imageName}, already exists in styledAvatars folder.`);
+    }
   }
 };
 
