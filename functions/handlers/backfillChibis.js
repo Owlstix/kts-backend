@@ -6,7 +6,7 @@ const fetch = require("node-fetch"); // Ensure you have node-fetch installed
 // Configuration
 const CONFIG = {
   OPENAI_API_KEY: functions.config().openai.api_key,
-  BUCKET_PREFIX: "test",
+  BUCKET_PREFIX: "chibi",
   IMAGE_EXPIRY_DATE: "03-17-2025",
   FIRESTORE_COLLECTION: "chibis",
   BATCH_SIZE: 5, // Number of files to process in each batch
