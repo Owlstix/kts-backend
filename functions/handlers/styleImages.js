@@ -151,7 +151,7 @@ async function processImageWithStyleReferences(file, styleReferences) {
   const generationResponse = await leonardoai.createGeneration({
     height: 1024,
     width: 1024,
-    modelId: "b24e16ff-06e3-43eb-8d33-4416c2d75876",
+    modelId: "1e60896f-3c26-4296-8ecc-53e2afecc132",
     prompt: "dark fantasy setting character, dynamic scene, keep colours identical to original image",
     presetStyle: "DYNAMIC",
     photoReal: false,
@@ -160,7 +160,7 @@ async function processImageWithStyleReferences(file, styleReferences) {
     // negative_prompt: "dirty face, black lines on face, sketchy face, artifacts on face, dots on face",
     contrastRatio: 1,
     init_image_id: initImageId,
-    init_strength: 0.90,
+    init_strength: 0.70,
     controlnets: styleReferences,
     elements: [{
       akUUID: "12eb63cd-da9e-440a-958d-f09595829256", // Oldschool Comic

@@ -44,9 +44,9 @@ async function processChibiFile(file) {
     });
 
     // Pass gender to generateDescription
-    const description = await generateDescription(signedUrl, gender);
+    const description = await generateDescription(signedUrl, gender, type);
     // Pass gender to generateAvatar along with description and chibiIdWithoutExtension
-    await generateAvatar(description, chibiIdWithoutExtension, gender);
+    await generateAvatar(description, chibiIdWithoutExtension, gender, type);
 
     await db.collection(CONFIG.FIRESTORE_COLLECTION).doc(chibiIdWithoutExtension).set({
       desc: description,
@@ -66,10 +66,10 @@ async function processChibiFile(file) {
  * @return {Promise<string>} A promise that resolves to the generated description.
  */
 async function generateDescription(imageUrl, gender, type) {
-  const prompt = `Generate description of how this ${gender} ${type} character: skin color, face details, haircut, hair color.
-    describe exact looks as if it was non-chibi full size darkfantasy character, 
-    add dynamical pose description, add description of background where this hero stands
-    description should not be more than 200 words long.`;
+  const prompt = `Picture depicts ${gender} ${type}. 
+    describe exact looks of character on the picture as if it was non-chibi full size character in dark fantasy world, 
+    add dynamical pose description, add description of background and environment. 
+    description should not be more than 150 words long.`;
   console.log("Sending prompt to OpenAI in generateDescription:", prompt); // Logging the prompt
   const response = await openai.chat.completions.create({
     model: "gpt-4o",
@@ -97,13 +97,12 @@ async function generateDescription(imageUrl, gender, type) {
  */
 async function generateAvatar(description, chibiId, gender, type) {
   const prompt =
-  `Сreate a stunning digital artwork in the style of 'Arcane,' the animated series from League of Legends. 
-  The image should depict a dynamic scene featuring ${gender} ${type} hero, ${description}. 
+  `Сreate a stunning digital artwork, style mix of Arcane series and Borderlands game. 
+  that depicts a dynamic scene featuring ${gender} ${type} hero, ${description}. 
   The atmosphere should be intense and dramatic, with intricate details, and rich textures. Use a dark, 
-  moody color palette to capture the unique visual style of Arcane. 
-  The characters should be in mid-action, showcasing their personalities and abilities. 
+  moody color palette to capture the unique visual style of dark fantasy.
   Ensure the composition is visually engaging, with a strong sense of depth and movement. 
-  no text should be used. apply filter on image similar to game "borderlands" style`;
+  no text should be used. Do not make glowing eyes.`;
   console.log("Sending prompt to OpenAI in generateAvatar:", prompt); // Logging the prompt
   const response = await openai.images.generate({
     model: "dall-e-3",
