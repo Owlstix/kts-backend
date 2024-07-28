@@ -11,8 +11,6 @@ const {getHeroes} = require("./handlers/getHeroes");
 const {aiGenerateEvent} = require("./handlers/aiGenerateEvent");
 const {updateUserState} = require("./handlers/updateUserState");
 const {getWorldState} = require("./handlers/getWorldState");
-const {askChatGpt} = require("./handlers/askChatGpt");
-const {generateImage} = require("./handlers/generateImage");
 const {backfillChibis} = require("./handlers/backfillChibis");
 const {styleImages} = require("./handlers/styleImages");
 
@@ -23,8 +21,6 @@ exports.getHeroes = functions.https.onRequest(getHeroes);
 exports.aiGenerateEvent = functions.https.onRequest(aiGenerateEvent);
 exports.updateUserState = functions.https.onRequest(updateUserState);
 exports.getWorldState = functions.https.onRequest(getWorldState);
-exports.askChatGpt = functions.https.onRequest(askChatGpt);
-exports.generateImage = functions.https.onRequest(generateImage);
 exports.styleImages = functions.https.onRequest(styleImages);
 exports.backfillChibis = functions.runWith({
   timeoutSeconds: 540,
