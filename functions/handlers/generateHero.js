@@ -72,8 +72,9 @@ const generateHero = async (req, res) => {
     const chibiDoc = await getRandomChibiDoc(tier.toLowerCase(), gender.toLowerCase(), type.toLowerCase());
     const chibiId = chibiDoc.id;
     const chibiDesc = chibiDoc.data().desc;
+    const chibiAvatar = chibiDoc.data().styledAvatarUrl;
 
-    console.log(`Selected Chibi - ID: ${chibiId}, Desc: ${chibiDesc}`);
+    console.log(`Selected Chibi - ID: ${chibiId}, Desc: ${chibiDesc}, Avatar: ${chibiAvatar}`);
 
     // Prepare the prompt for generating name and bio, including the chibi description
     const prompt = heroGeneratePrompt(
@@ -101,6 +102,7 @@ const generateHero = async (req, res) => {
       name: hero.name,
       bio: hero.bio,
       chibiId, // Assign the chibiId to the hero object
+      chibiAvatar, // Assign the chibiAvatar to the hero object
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
     };
 
@@ -120,6 +122,7 @@ const generateHero = async (req, res) => {
     // Assign the hero ID to the response object
     hero.id = heroRef.id;
     hero.chibiId = chibiId;
+    hero.chibiAvatar = chibiAvatar;
 
     // Send the response back to the client
     res.status(200).send({hero});

@@ -116,7 +116,7 @@ Ensure that all outputs follow this JSON schema:
 const heroGeneratePrompt = (gender, type, chibiDesc) => `
 Generate a name and bio for a 
 ${gender} 
-hero of class ${type}. His description is: ${chibiDesc}.
+hero of class ${type}. Description of this hero: ${chibiDesc}.
 set in a dark fantasy world. This is a cruel world where everyone tries to survive after a mysterious calamity. 
 The bio should be not exceeding 100 words. Use the following JSON schema:
 
