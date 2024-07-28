@@ -160,11 +160,11 @@ async function processImageWithStyleReferences(file, styleReferences) {
     // negative_prompt: "dirty face, black lines on face, sketchy face, artifacts on face, dots on face",
     contrastRatio: 1,
     init_image_id: initImageId,
-    init_strength: 0.70,
+    init_strength: 0.60,
     controlnets: styleReferences,
     elements: [{
       akUUID: "12eb63cd-da9e-440a-958d-f09595829256", // Oldschool Comic
-      weight: 1.10,
+      weight: 0.60,
     }],
   });
 
