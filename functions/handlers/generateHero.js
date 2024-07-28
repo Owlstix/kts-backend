@@ -10,6 +10,26 @@ const {geminiSystemInstruction, heroGeneratePrompt} = require("../constants/prom
 
 const db = admin.firestore();
 
+// Function to get a random chibi ID based on tier, gender, and type
+const getRandomChibiDoc = async (tier, gender, type) => {
+  console.log(`Looking for chibis with tier: ${tier}, gender: ${gender}, type: ${type}`);
+
+  const chibisRef = db.collection("chibis");
+  const querySnapshot = await chibisRef
+      .where("tier", "==", tier)
+      .where("gender", "==", gender)
+      .where("type", "==", type)
+      .get();
+
+  if (querySnapshot.empty) {
+    console.log("No matching chibis found.");
+    throw new Error("No matching chibis found.");
+  }
+
+  const randomIndex = Math.floor(Math.random() * querySnapshot.size);
+  return querySnapshot.docs[randomIndex];
+};
+
 const generateHero = async (req, res) => {
   try {
     const {userId} = req.body;
@@ -27,8 +47,8 @@ const generateHero = async (req, res) => {
     }
 
     // Randomly generate hero attributes
-    const gender = generateRandomGender();
-    const tier = generateRandomValueFromProbabilities(
+    const genderIndex = generateRandomGender();
+    const tierIndex = generateRandomValueFromProbabilities(
         Object.values(TIER),
         Object.values(TIER_PROPERTIES).map((t) => t.rarity),
     );
@@ -37,14 +57,31 @@ const generateHero = async (req, res) => {
     const equalProbability = 1 / typeKeys.length;
     const equalProbabilities = new Array(typeKeys.length).fill(equalProbability);
 
-    const type = generateRandomValueFromProbabilities(
+    const typeIndex = generateRandomValueFromProbabilities(
         Object.values(HERO_TYPE),
         equalProbabilities,
     );
 
-    // Prepare the prompt for generating name and bio
-    const prompt = heroGeneratePrompt(Object.keys(GENDER)[gender].toLowerCase(),
-        Object.keys(HERO_TYPE)[type].toLowerCase());
+    const gender = Object.keys(GENDER)[genderIndex];
+    const tier = Object.keys(TIER)[tierIndex];
+    const type = Object.keys(HERO_TYPE)[typeIndex];
+
+    console.log(`Generated attributes - Gender: ${gender}, Tier: ${tier}, Type: ${type}`);
+
+    // Get a random chibi document based on the generated hero attributes
+    const chibiDoc = await getRandomChibiDoc(tier.toLowerCase(), gender.toLowerCase(), type.toLowerCase());
+    const chibiId = chibiDoc.id;
+    const chibiDesc = chibiDoc.data().desc;
+
+    console.log(`Selected Chibi - ID: ${chibiId}, Desc: ${chibiDesc}`);
+
+    // Prepare the prompt for generating name and bio, including the chibi description
+    const prompt = heroGeneratePrompt(
+        gender.toLowerCase(),
+        type.toLowerCase(),
+        chibiDesc, // Add the chibi description to the prompt
+    );
+    console.log(`Generated prompt: ${prompt}`);
 
     // Call the askGemini function with the system instruction and generated prompt
     const heroData = await askGemini(geminiSystemInstruction, prompt);
@@ -52,7 +89,7 @@ const generateHero = async (req, res) => {
     const {name, bio} = heroData;
 
     // Create hero using Hero class
-    const hero = Hero.create(gender, tier, type, name, bio);
+    const hero = Hero.create(genderIndex, tierIndex, typeIndex, name, bio);
 
     // Add additional properties to hero object (excluding currentHp)
     const heroWithTimestamp = {
@@ -63,6 +100,7 @@ const generateHero = async (req, res) => {
       attack: hero.attack,
       name: hero.name,
       bio: hero.bio,
+      chibiId, // Assign the chibiId to the hero object
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
     };
 
@@ -81,6 +119,7 @@ const generateHero = async (req, res) => {
 
     // Assign the hero ID to the response object
     hero.id = heroRef.id;
+    hero.chibiId = chibiId;
 
     // Send the response back to the client
     res.status(200).send({hero});
