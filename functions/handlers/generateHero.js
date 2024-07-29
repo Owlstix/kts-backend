@@ -90,7 +90,7 @@ const generateHero = async (req, res) => {
     const {name, bio} = heroData;
 
     // Create hero using Hero class
-    const hero = Hero.create(genderIndex, tierIndex, typeIndex, name, bio);
+    const hero = Hero.create(genderIndex, tierIndex, typeIndex, name, bio, chibiId);
 
     // Add additional properties to hero object (excluding currentHp)
     const heroWithTimestamp = {
@@ -101,8 +101,7 @@ const generateHero = async (req, res) => {
       attack: hero.attack,
       name: hero.name,
       bio: hero.bio,
-      chibiId, // Assign the chibiId to the hero object
-      chibiAvatar, // Assign the chibiAvatar to the hero object
+      chibiId: hero.chibiId, // Assign the chibiId to the hero object
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
     };
 

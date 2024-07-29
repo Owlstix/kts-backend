@@ -22,8 +22,9 @@ class Hero {
      * @param {number} attack - The attack value of the hero.
      * @param {string} name - The name of the hero.
      * @param {string} bio - The biography of the hero.
+     * @param {string} chibiId - The chibi ID of the hero.
      */
-  constructor(id, gender, tier, type, maxHp, currentHp, attack, name, bio) {
+  constructor(id, gender, tier, type, maxHp, currentHp, attack, name, bio, chibiId) {
     this.id = id;
     this.gender = gender;
     this.tier = tier;
@@ -33,6 +34,7 @@ class Hero {
     this.attack = attack;
     this.name = name;
     this.bio = bio;
+    this.chibiId = chibiId;
   }
 
   /**
@@ -42,9 +44,10 @@ class Hero {
      * @param {number} type - The type of the hero.
      * @param {string} name - The name of the hero.
      * @param {string} bio - The biography of the hero.
+     * @param {string} chibiId - The chibi ID of the hero.
      * @return {Hero} - The newly created hero.
      */
-  static create(gender, tier, type, name, bio) {
+  static create(gender, tier, type, name, bio, chibiId) {
     const tierProps = TIER_PROPERTIES[tier];
     const typeProps = HERO_TYPE_PROPERTIES[type];
 
@@ -52,7 +55,7 @@ class Hero {
     const currentHp = maxHp; // Initialize current HP to max HP
     const attack = generateRandomValueInRange(typeProps.attack.min, typeProps.attack.max) * tierProps.multiplier;
 
-    return new Hero(null, gender, tier, type, maxHp, currentHp, attack, name, bio);
+    return new Hero(null, gender, tier, type, maxHp, currentHp, attack, name, bio, chibiId);
   }
 }
 

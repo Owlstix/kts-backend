@@ -1,5 +1,5 @@
 const admin = require("firebase-admin");
-const {Hero} = require("../types/hero");
+const Hero = require("../types/hero");
 
 const db = admin.firestore();
 
@@ -31,8 +31,17 @@ const getHeroes = async (req, res) => {
 
       const heroData = heroDoc.data();
 
+      // Get styledAvatarUrl from the chibis collection
+      const chibiDoc = await db.collection("chibis").doc(heroData.chibiId).get();
+      if (!chibiDoc.exists) {
+        throw new Error(`Chibi with chibiId ${heroData.chibiId} not found`);
+      }
+
+      const chibiData = chibiDoc.data();
+      const chibiAvatar = chibiData.styledAvatarUrl;
+
       if (userToHeroData.currentHp > 0) {
-        return new Hero(
+        const hero = new Hero(
             heroId,
             heroData.gender,
             heroData.tier,
@@ -42,7 +51,10 @@ const getHeroes = async (req, res) => {
             heroData.attack,
             heroData.name,
             heroData.bio,
+            heroData.chibiId,
         );
+        hero.chibiAvatar = chibiAvatar;
+        return hero;
       } else {
         return null;
       }
