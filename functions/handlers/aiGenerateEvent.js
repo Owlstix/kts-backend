@@ -38,7 +38,7 @@ const aiGenerateEvent = async (req, res) => {
       // Decide which prompt to use (50-50 chance)
       const useEnemyPrompt = Math.random() < 0.5;
       prompt = useEnemyPrompt ?
-        heroEventEnemyPrompt(heroData.type, heroData.name, heroData.gender, heroData.currentHp, heroData.attack) :
+        heroEventEnemyPrompt(heroData.type, heroData.name, heroData.gender, heroData.currentHp, heroData.attack):
         heroEventNoEnemyPrompt(heroData.type, heroData.name, heroData.gender, heroData.currentHp, heroData.attack);
     } else {
       const villageData = {food, supplies, morale};

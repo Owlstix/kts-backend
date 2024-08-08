@@ -17,15 +17,15 @@ const GENDER = {
 
 const TIER_PROPERTIES = {
   [TIER.S]: {
-    rarity: 0.05,
+    rarity: 0.30,
     multiplier: 2,
   },
   [TIER.A]: {
-    rarity: 0.15,
+    rarity: 0.35,
     multiplier: 1.5,
   },
   [TIER.B]: {
-    rarity: 0.8,
+    rarity: 0.35,
     multiplier: 1,
   },
 };

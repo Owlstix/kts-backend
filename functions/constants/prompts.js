@@ -39,7 +39,8 @@ conclusion of the event with no further story continuation. Ensure everything fo
         "desc": "str",
         "hpDelta": "int",
         "suppliesDelta": "int",
-        "foodDelta": "int"
+        "foodDelta": "int",
+        "moraleDelta": "int"
       }
     }
   ]
@@ -73,7 +74,8 @@ Ensure everything follows this JSON schema:
         "desc": "str",
         "hpDelta": "int",
         "suppliesDelta": "int",
-        "foodDelta": "int"
+        "foodDelta": "int",
+        "moraleDelta": "int"
       }
     }
   ]

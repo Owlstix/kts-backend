@@ -15,7 +15,7 @@ const getHeroes = async (req, res) => {
     // Find all userToHero documents for the user
     const userToHeroSnapshot = await db.collection("userToHero").where("userId", "==", userId).get();
     if (userToHeroSnapshot.empty) {
-      res.status(404).send({error: "No heroes found for the user"});
+      res.status(200).send({heroes: []});
       return;
     }
 
