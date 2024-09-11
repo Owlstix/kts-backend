@@ -185,14 +185,14 @@ async function processImageWithStyleReferences(file, styleReferences) {
 
   const bucket = admin.storage().bucket();
   const imageName = path.basename(file.name, ".png"); // Strip the .png extension from the imageName
-  const fileName = `${CONFIG.STYLED_AVATARS_FOLDER}/${imageName}.png`; // Add .png here for the fileName in storage
+  const fileName = `${CONFIG.STYLED_AVATARS_FOLDER}/${imageName}.jpg`; // Add .png here for the fileName in storage
   const storageFile = bucket.file(fileName);
 
   console.log("Saving image to storage:", fileName);
 
   await storageFile.save(imageBuffer, {
     metadata: {
-      contentType: "image/png",
+      contentType: "image/jpg",
     },
   });
 

@@ -13,6 +13,8 @@ const {updateUserState} = require("./handlers/updateUserState");
 const {getWorldState} = require("./handlers/getWorldState");
 const {backfillChibis} = require("./handlers/backfillChibis");
 const {styleImages} = require("./handlers/styleImages");
+const {backfillStyledAvatarUrls} = require("./handlers/backfillStyledAvatarUrls");
+const {convertToJpg} = require("./handlers/convertToJpg");
 
 // Export functions
 exports.loginByUserName = functions.https.onRequest(loginByUserName);
@@ -22,6 +24,8 @@ exports.aiGenerateEvent = functions.https.onRequest(aiGenerateEvent);
 exports.updateUserState = functions.https.onRequest(updateUserState);
 exports.getWorldState = functions.https.onRequest(getWorldState);
 exports.styleImages = functions.https.onRequest(styleImages);
+exports.backfillStyledAvatarUrls = functions.https.onRequest(backfillStyledAvatarUrls);
+exports.convertToJpg = functions.https.onRequest(convertToJpg);
 exports.backfillChibis = functions.runWith({
   timeoutSeconds: 540,
   memory: "2GB",
