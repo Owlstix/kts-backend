@@ -4,6 +4,7 @@ const fetch = require("node-fetch");
 const path = require("path");
 const FormData = require("form-data");
 const leonardoai = require("@api/leonardoai");
+const {getDownloadURL} = require("firebase-admin/storage");
 
 const db = admin.firestore();
 
@@ -185,7 +186,7 @@ async function processImageWithStyleReferences(file, styleReferences) {
 
   const bucket = admin.storage().bucket();
   const imageName = path.basename(file.name, ".png"); // Strip the .png extension from the imageName
-  const fileName = `${CONFIG.STYLED_AVATARS_FOLDER}/${imageName}.jpg`; // Add .png here for the fileName in storage
+  const fileName = `${CONFIG.STYLED_AVATARS_FOLDER}/${imageName}.jpg`; // Add .jpg here for the fileName in storage
   const storageFile = bucket.file(fileName);
 
   console.log("Saving image to storage:", fileName);
@@ -199,16 +200,19 @@ async function processImageWithStyleReferences(file, styleReferences) {
   console.log("Image saved to storage:", fileName);
 
   // Firestore interaction starts here
-  const chibiDocRef = db.collection("chibis").doc(imageName); // Use imageName without .png as doc ID
+  const chibiDocRef = db.collection("chibis").doc(imageName);
   const chibiDoc = await chibiDocRef.get();
+
+  // Skip the document if the styledAvatarUrl already exists
   if (chibiDoc.exists && chibiDoc.data().styledAvatarUrl) {
-    throw new Error(`Styled avatar URL already exists for ${imageName}`);
-  } else {
-    const styledImageUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
-    await chibiDocRef.set({styledAvatarUrl: styledImageUrl}, {merge: true});
-    console.log(`Styled avatar URL updated for ${imageName}`);
-    return styledImageUrl;
+    console.log(`Skipping ${imageName}, styled avatar already exists in Firestore.`);
+    return; // Skip further processing for this file and move to the next iteration
   }
+
+  const styledImageUrl = await getDownloadURL(storageFile);
+  await chibiDocRef.set({styledAvatarUrl: styledImageUrl}, {merge: true});
+  console.log(`Styled avatar URL updated for ${imageName}`);
+  return true;
 }
 
 /**
@@ -229,17 +233,32 @@ const styleImages = async () => {
   }));
 
   for (const file of avatarFiles) {
-    const imageName = path.basename(file.name);
-    const styledFileName = `${CONFIG.STYLED_AVATARS_FOLDER}/${imageName}`;
+    const imageName = path.basename(file.name, ".png"); // Get the file name without the extension
+    const styledFileName = `${CONFIG.STYLED_AVATARS_FOLDER}/${imageName}.jpg`; // Adjust for .jpg as your target format
+
+    // Check if the styled avatar already exists in the styledAvatars folder
     const [fileExists] = await bucket.file(styledFileName).exists();
 
-    if (!fileExists) {
-      // Only process the image if it doesn't already exist in the styledAvatars folder
-      await processImageWithStyleReferences(file, styleReferences);
-      break; // Stop after processing one image fully
-    } else {
+    if (fileExists) {
       console.log(`Skipping ${imageName}, already exists in styledAvatars folder.`);
+      continue; // Skip to the next file if it already exists
     }
+
+    // Now that we know the file doesn't exist, proceed with Leonardo API and Firestore operations
+
+    // Check in Firestore if the styledAvatarUrl already exists
+    const chibiDocRef = db.collection("chibis").doc(imageName);
+    const chibiDoc = await chibiDocRef.get();
+
+    if (chibiDoc.exists && chibiDoc.data().styledAvatarUrl) {
+      console.log(`Skipping ${imageName}, styled avatar already exists in Firestore.`);
+      continue; // Skip further processing for this file
+    }
+
+    // Process the image with style references using Leonardo API
+    await processImageWithStyleReferences(file, styleReferences);
+
+    break; // Stop after processing one image fully
   }
 };
 
