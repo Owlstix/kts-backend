@@ -1,12 +1,12 @@
 const functions = require("firebase-functions");
 const {OpenAI} = require("openai");
 const admin = require("firebase-admin");
-const fetch = require("node-fetch"); // Ensure you have node-fetch installed
+const fetch = require("node-fetch");
 
 // Configuration
 const CONFIG = {
   OPENAI_API_KEY: functions.config().openai.api_key,
-  BUCKET_PREFIX: "chibi",
+  BUCKET_PREFIX: "test",
   IMAGE_EXPIRY_DATE: "03-17-2025",
   FIRESTORE_COLLECTION: "chibis",
   BATCH_SIZE: 5, // Number of files to process in each batch
@@ -34,6 +34,8 @@ async function getChibiFiles() {
  */
 async function processChibiFile(file) {
   const [, type, tier, gender, chibiId] = file.name.split("/");
+  console.log("Processing chibi file:", chibiId);
+  console.log("filename:", file.name);
   const chibiIdWithoutExtension = chibiId.replace(".png", "");
 
   const chibiDoc = await db.collection(CONFIG.FIRESTORE_COLLECTION).doc(chibiIdWithoutExtension).get();
@@ -126,8 +128,6 @@ async function generateAvatar(description, chibiId, gender, type) {
       contentType: "image/png",
     },
   });
-
-  return `https://storage.googleapis.com/${bucket.name}/${fileName}`;
 }
 
 // Main backfill function with batching
