@@ -2,6 +2,7 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const OpenAI = require("openai");
 const db = admin.firestore();
+const {HERO_TYPE, GENDER} = require("../types/types");
 
 const openai = new OpenAI({
   apiKey: functions.config().openai.api_key,
@@ -41,8 +42,26 @@ exports.chatWithHero = functions.https.onRequest(async (req, res) => {
       threadId = userHeroDoc.data().threadId;
       await continueConversation(threadId, message, res);
     } else {
-      // Thread doesn't exist, create a new thread and run
-      const {assistantResponse, threadId} = await createNewThreadAndRun(message);
+      // Thread doesn't exist, fetch hero details from the heroes collection
+      const heroDoc = await db.collection("heroes").doc(heroId).get();
+
+      if (!heroDoc.exists) {
+        return res.status(404).send({error: "Hero not found."});
+      }
+
+      const heroData = heroDoc.data();
+      const heroName = heroData.name;
+      const heroBio = heroData.bio;
+      const heroGender = heroData.gender !== undefined ? Object.keys(GENDER)[heroData.gender] : "Unknown";
+      const heroType = heroData.type !== undefined ? Object.keys(HERO_TYPE)[heroData.type] : "Unknown";
+
+      // Create a new thread and run, passing the hero details along with the user's message
+      const {assistantResponse, threadId} = await createNewThreadAndRun(message, {
+        name: heroName,
+        bio: heroBio,
+        gender: heroGender,
+        type: heroType,
+      });
 
       // Update the existing document with the new threadId
       await userHeroDoc.ref.update({threadId});
@@ -60,16 +79,29 @@ exports.chatWithHero = functions.https.onRequest(async (req, res) => {
 });
 
 /**
- * Creates a new thread and run with the provided user message and retrieves the assistant's response.
+ * Creates a new thread and run with the provided user message and hero details,
+ * then retrieves the assistant's response.
  *
  * @param {string} message - The user's message to initiate the conversation.
+ * @param {Object} heroDetails - An object containing the hero's details (name, bio, gender, type).
  * @return {Promise<{assistantResponse: string, threadId: string}>} - A promise that resolves to an object
  */
-async function createNewThreadAndRun(message) {
+async function createNewThreadAndRun(message, heroDetails) {
   try {
-    // Step 1: Create a new thread with the user's message
+    // Step 1: Create a new thread with the user's message and hero details
     const newThread = await openai.beta.threads.create({
-      messages: [{role: "user", content: message}],
+      messages: [
+        {
+          role: "user",
+          content: `You are now interacting with the hero:
+                    Name: ${heroDetails.name},
+                    Gender: ${heroDetails.gender},
+                    Bio: ${heroDetails.bio},
+                    Class: ${heroDetails.type}.
+                    
+                    ${message}`,
+        },
+      ],
     });
 
     const threadId = newThread.id;
@@ -77,7 +109,7 @@ async function createNewThreadAndRun(message) {
     // Step 2: Create a run to process the user's message
     const runResponse = await openai.beta.threads.runs.create(threadId, {
       assistant_id: "asst_dDBkGhNjCSlloquyL43dn99i", // Replace with your actual assistant ID
-      model: "gpt-4o", // Or whatever model you're using
+      model: "gpt-4o-mini", // Or whatever model you're using
     });
 
     // Polling mechanism to check when the run is complete
