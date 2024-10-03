@@ -19,9 +19,7 @@ const getWorldState = async (req, res) => {
       // Create a new userWorldState document
       const newUserWorldState = {
         userId,
-        food: 20, // Default value
         supplies: 50, // Default value
-        morale: 100, // Default value
         passedTutorial: false, // Default value
       };
 
@@ -38,9 +36,7 @@ const getWorldState = async (req, res) => {
 
     res.status(200).send({
       world: {
-        food: userWorldState.food,
         supplies: userWorldState.supplies,
-        morale: userWorldState.morale,
         passedTutorial: userWorldState.passedTutorial,
       },
     });

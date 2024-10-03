@@ -13,7 +13,7 @@ const updateUserState = async (req, res) => {
 
     // Update world state if provided
     if (world) {
-      const {morale, supplies, food, passedTutorial} = world;
+      const {supplies, passedTutorial} = world;
       const userWorldStateSnapshot = await db.collection("userWorldState")
           .where("userId", "==", userId)
           .get();
@@ -29,9 +29,7 @@ const updateUserState = async (req, res) => {
 
       const worldUpdate = {
         userId, // Include userId in the update
-        morale,
         supplies,
-        food,
         passedTutorial,
       };
 

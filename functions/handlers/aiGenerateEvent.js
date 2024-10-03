@@ -13,10 +13,10 @@ const db = admin.firestore();
 
 const aiGenerateEvent = async (req, res) => {
   try {
-    const {userId, heroId, currentHp, food, supplies, morale} = req.body;
+    const {userId, heroId, currentHp, supplies} = req.body;
 
-    if (!userId || food === undefined || supplies === undefined || morale === undefined) {
-      res.status(400).send({error: "userId, food, supplies, and morale are required"});
+    if (!userId || supplies === undefined) {
+      res.status(400).send({error: "userId and supplies are required"});
       return;
     }
 
@@ -41,8 +41,8 @@ const aiGenerateEvent = async (req, res) => {
         heroEventEnemyPrompt(heroData.type, heroData.name, heroData.gender, heroData.currentHp, heroData.attack):
         heroEventNoEnemyPrompt(heroData.type, heroData.name, heroData.gender, heroData.currentHp, heroData.attack);
     } else {
-      const villageData = {food, supplies, morale};
-      prompt = villageEventTimerPrompt(villageData.food, villageData.supplies, villageData.morale);
+      const villageData = {supplies};
+      prompt = villageEventTimerPrompt(villageData.supplies);
     }
 
     // Call the askGemini function with the system instruction and generated prompt

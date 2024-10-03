@@ -14,13 +14,13 @@ Gender: ${gender}
 Current HP: ${currentHp}
 Attack Power ${attack}
 This character is one of the survivors in a cruel dark fantasy world and is
-leaving the village to find food and supplies. Create a story describing what this character
+leaving the village to find supplies. Create a story describing what this character
 is doing when they go outside the village, and conclude the story with an
 encounter with an enemy. Generate the enemy's name, hp, and attack. After that,
 provide three options for the hero to choose from.
 Finally, generate results for each of those options. The results should include
 a description of what happened when the hero chose that option, how many hp were lost,
-and how much supplies and food were found. Ensure that the results describe the
+and how much supplies were found. Ensure that the results describe the
 conclusion of the event with no further story continuation. Ensure everything follows this JSON schema:
 
 {
@@ -38,9 +38,7 @@ conclusion of the event with no further story continuation. Ensure everything fo
       "result": {
         "desc": "str",
         "hpDelta": "int",
-        "suppliesDelta": "int",
-        "foodDelta": "int",
-        "moraleDelta": "int"
+        "suppliesDelta": "int"
       }
     }
   ]
@@ -56,11 +54,11 @@ Current HP: ${currentHp}
 Attack Power: ${attack}
 
 This character is one of the survivors in a cruel dark fantasy world and is 
-leaving the village to find food and supplies. Generate an event that does not 
+leaving the village to find supplies. Generate an event that does not 
 include enemy encounters but requires the player to make morally complex choices. 
 Provide the event story, followed by three options for what the hero can do, and 
 include a description of the outcome for each option. Each event result should 
-affect the current HP of the hero, supplies, or food.
+affect the current HP of the hero, supplies.
 Ensure everything follows this JSON schema:
 
 {
@@ -73,28 +71,24 @@ Ensure everything follows this JSON schema:
       "result": {
         "desc": "str",
         "hpDelta": "int",
-        "suppliesDelta": "int",
-        "foodDelta": "int",
-        "moraleDelta": "int"
+        "suppliesDelta": "int"
       }
     }
   ]
 }
 `;
 
-const villageEventTimerPrompt = (food, supplies, morale) => `
+const villageEventTimerPrompt = (supplies) => `
 Generate a unique event for a village inhabited by heroes in a cruel dark fantasy world. You should create 
 a situation where the village is facing a crisis and the heroes must make a difficult decision.
 The village has the following attributes:
-Food: ${food}
 Supplies: ${supplies}
-Morale: ${morale}
 
 Create three distinct and grim event options for the village. 
 Each option should be unique and potentially cruel.
 After presenting the options, generate the outcomes for each. 
 The outcomes should include a detailed description of what happened and 
-indicate changes in the village's supplies, food, and morale.
+indicate changes in the village's supplies.
 Ensure that all outputs follow this JSON schema:
 
 {
@@ -106,9 +100,7 @@ Ensure that all outputs follow this JSON schema:
       "option": "str",
       "result": {
         "desc": "str",
-        "suppliesDelta": "int",
-        "foodDelta": "int",
-        "moraleDelta": "int"
+        "suppliesDelta": "int"
       }
     }
   ]
