@@ -16,6 +16,9 @@ const {styleImages} = require("./handlers/styleImages");
 const {backfillStyledAvatarUrls} = require("./handlers/backfillStyledAvatarUrls");
 const {convertToJpg} = require("./handlers/convertToJpg");
 const {chatWithHero} = require("./handlers/chatWithHero");
+const {registerOrLoginUser} = require("./handlers/registerOrLoginUser");
+const {registerUser} = require("./handlers/registerUser");
+const {loginUser} = require("./handlers/loginUser");
 
 // Export functions
 exports.loginByUserName = functions.https.onRequest(loginByUserName);
@@ -28,6 +31,9 @@ exports.styleImages = functions.https.onRequest(styleImages);
 exports.backfillStyledAvatarUrls = functions.https.onRequest(backfillStyledAvatarUrls);
 exports.convertToJpg = functions.https.onRequest(convertToJpg);
 exports.chatWithHero = functions.https.onRequest(chatWithHero);
+exports.registerOrLoginUser = functions.https.onRequest(registerOrLoginUser);
+exports.registerUser = functions.https.onRequest(registerUser);
+exports.loginUser = functions.https.onRequest(loginUser);
 exports.backfillChibis = functions.runWith({
   timeoutSeconds: 540,
   memory: "2GB",
